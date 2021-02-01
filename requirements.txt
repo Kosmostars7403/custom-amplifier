@@ -1,0 +1,2 @@
+instabot==0.117.0
+environs==9.3.0
