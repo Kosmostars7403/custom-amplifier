@@ -15,15 +15,13 @@ def increment_rating(user, rating_type):
         rating_type[user] = 1
 
 
-def login_instagram():
+def login_instagram(username, password):
     instabot = Bot()
-    instabot.login(username=instagram_username, password=instagram_password)
+    instabot.login(username=username, password=password)
     return instabot
 
 
-def get_instagram_audience():
-    bot = login_instagram()
-
+def get_instagram_audience(bot):
     user_id = bot.get_user_id_from_username("cocacolarus")
     user_posts = bot.get_total_user_medias(user_id)[4::-1]
 
@@ -56,7 +54,9 @@ if __name__ == '__main__':
     instagram_username = env('INSTAGRAM_USERNAME')
     instagram_password = env('INSTAGRAM_PASSWORD')
 
-    commentators_rating, commentators_by_post_rating = get_instagram_audience()
+    bot = login_instagram(instagram_username, instagram_password)
+
+    commentators_rating, commentators_by_post_rating = get_instagram_audience(bot)
 
     print('----Комментаторы за последние 3 месяца с кол-вом комментариев----:')
     pprint(commentators_rating)
