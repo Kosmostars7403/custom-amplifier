@@ -39,6 +39,7 @@ $ pip install -r requirements.txt
 ```
 INSTAGRAM_USERNAME=имя пользователя в инстаграм
 INSTAGRAM_PASSWORD=пароль в инстаграм
+INSTAGRAM_ACCOUNT_NAME=название исследуемого аккаунта в инстаграме
 
 VK_SERVICE_KEY=создайте приложение в VK и скопируйте сюда сервисный ключ
 VK_GROUP_NAME=введите имя группы, его можно взять из ссылки на сообщество

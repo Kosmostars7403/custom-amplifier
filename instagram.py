@@ -21,8 +21,15 @@ def login_instagram(username, password):
     return instabot
 
 
-def get_instagram_audience(bot):
-    user_id = bot.get_user_id_from_username("cocacolarus")
+def filter_active_commentators_from_comment(comment, commentators_rating):
+    created_at = datetime.utcfromtimestamp(comment['created_at']).date()
+    if created_at > edge_of_comments_date:
+        increment_rating(comment['user_id'], commentators_rating)
+    return comment['user_id']
+
+
+def get_instagram_audience(bot, target_account_name):
+    user_id = bot.get_user_id_from_username(target_account_name)
     user_posts = bot.get_total_user_medias(user_id)[4::-1]
 
     commentators_rating = {}
@@ -30,18 +37,8 @@ def get_instagram_audience(bot):
 
     for post in user_posts:
         comments = bot.get_media_comments(post)
-        commentators = set()
-
-        for comment in comments:
-            edge_of_comments_date = today - timedelta(days=RANGE_OF_USER_COMMENTS_IN_DAYS)
-            created_at = datetime.utcfromtimestamp(comment['created_at']).date()
-            if created_at > edge_of_comments_date:
-                commentator_id = comment['user_id']
-                commentators.add(commentator_id)
-                increment_rating(commentator_id, commentators_rating)
-
-        for user_id in commentators:
-            increment_rating(user_id, commentators_by_post_rating)
+        commentators = {filter_active_commentators_from_comment(comment, commentators_rating) for comment in comments}
+        [increment_rating(user_id, commentators_by_post_rating) for user_id in commentators]
 
     return commentators_rating, commentators_by_post_rating
 
@@ -53,10 +50,13 @@ if __name__ == '__main__':
     today = date.today()
     instagram_username = env('INSTAGRAM_USERNAME')
     instagram_password = env('INSTAGRAM_PASSWORD')
+    target_account_name = env('INSTAGRAM_ACCOUNT_NAME')
 
     bot = login_instagram(instagram_username, instagram_password)
 
-    commentators_rating, commentators_by_post_rating = get_instagram_audience(bot)
+    edge_of_comments_date = today - timedelta(days=RANGE_OF_USER_COMMENTS_IN_DAYS)
+
+    commentators_rating, commentators_by_post_rating = get_instagram_audience(bot, target_account_name)
 
     print('----Комментаторы за последние 3 месяца с кол-вом комментариев----:')
     pprint(commentators_rating)

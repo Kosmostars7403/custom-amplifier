@@ -64,16 +64,16 @@ def get_reactions_from_post(posts):
             if reactor_id in reactors:
                 reactors[reaction['id']][reaction['type']] += 1
                 continue
-            else:
-                reactors[reaction['id']] = {
-                    "LIKE": 0,
-                    "LOVE": 0,
-                    "WOW": 0,
-                    "HAHA": 0,
-                    "SAD": 0,
-                    "ANGRY": 0,
-                    "THANKFUL": 0
-                }
+
+            reactors[reaction['id']] = {
+                "LIKE": 0,
+                "LOVE": 0,
+                "WOW": 0,
+                "HAHA": 0,
+                "SAD": 0,
+                "ANGRY": 0,
+                "THANKFUL": 0
+            }
 
             reactors[reaction['id']][reaction['type']] = 1
 
@@ -96,7 +96,3 @@ if __name__ == '__main__':
     pprint(commentators)
     print('----Реакции пользователей:----')
     pprint(reactors)
-
-
-
-
