@@ -1,11 +1,21 @@
 from environs import Env
 from datetime import datetime, date, timedelta
 from pprint import pprint
+from collections import defaultdict
 
 from utils import handle_request
 
 
 FILTER_PERIOD_IN_DAYS = 30
+REACTIONS_TEMPLATE = {
+    "LIKE": 0,
+    "LOVE": 0,
+    "WOW": 0,
+    "HAHA": 0,
+    "SAD": 0,
+    "ANGRY": 0,
+    "THANKFUL": 0
+}
 
 
 def get_posts_list(facebook_group_id, facebook_access_token):
@@ -18,19 +28,16 @@ def get_posts_list(facebook_group_id, facebook_access_token):
 
     response = handle_request(url, payload)
 
-    post_ids = []
-
-    for post in response['data']:
-        post_ids.append(post['id'])
+    post_ids = [post['id'] for post in response['data']]
 
     return post_ids
 
 
-def get_comments_from_posts(posts, days):
+def get_comments_from_posts(post_ids, days):
     commentators = set()
     edge_of_comments_date = today - timedelta(days=days)
 
-    for post_id in posts:
+    for post_id in post_ids:
         url = f'https://graph.facebook.com/v9.0/{post_id}/comments'
 
         payload = {
@@ -47,10 +54,10 @@ def get_comments_from_posts(posts, days):
     return commentators
 
 
-def get_reactions_from_post(posts):
-    reactors = {}
+def get_reactions_from_post(post_ids):
+    reactors = defaultdict(dict)
 
-    for post_id in posts:
+    for post_id in post_ids:
         url = f'https://graph.facebook.com/v9.0/{post_id}/reactions'
 
         payload = {
@@ -61,21 +68,12 @@ def get_reactions_from_post(posts):
         for reaction in response['data']:
             reactor_id = reaction['id']
 
-            if reactor_id in reactors:
-                reactors[reaction['id']][reaction['type']] += 1
-                continue
+            if reactor_id not in reactors:
+                reactors[reactor_id] = REACTIONS_TEMPLATE
+                # не используется defaultdict(int), так как в задаче нужно вывести
+                # ноль для реакций, которые пользователь не ставил
 
-            reactors[reaction['id']] = {
-                "LIKE": 0,
-                "LOVE": 0,
-                "WOW": 0,
-                "HAHA": 0,
-                "SAD": 0,
-                "ANGRY": 0,
-                "THANKFUL": 0
-            }
-
-            reactors[reaction['id']][reaction['type']] = 1
+            reactors[reactor_id][reaction['type']] += 1
 
     return reactors
 
@@ -95,4 +93,4 @@ if __name__ == '__main__':
     print('----Комментаторы за последний месяц:----')
     pprint(commentators)
     print('----Реакции пользователей:----')
-    pprint(reactors)
+    pprint(dict(reactors))
