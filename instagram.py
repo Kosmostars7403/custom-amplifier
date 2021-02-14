@@ -22,7 +22,7 @@ def login_instagram(username, password):
 
 def get_instagram_audience(bot, target_account_name):
     user_id = bot.get_user_id_from_username(target_account_name)
-    user_posts = bot.get_total_user_medias(user_id)[4::-1]
+    user_posts = bot.get_total_user_medias(user_id)
 
     edge_of_comments_date = today - timedelta(days=RANGE_OF_USER_COMMENTS_IN_DAYS)
 
