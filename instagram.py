@@ -1,18 +1,17 @@
 from datetime import datetime, date, timedelta
 from pprint import pprint
+from collections import Counter
 
 from instabot import Bot
 from environs import Env
 
 
 RANGE_OF_USER_COMMENTS_IN_DAYS = 90
+RATING_SIZE_IN_LINES = 5  # количество строчек топа комментаторов
 
 
-def increment_rating(user, rating_type):
-    if user in rating_type:
-        rating_type[user] += 1
-    else:
-        rating_type[user] = 1
+def check_comment_age(comment, edge_date):
+    return datetime.utcfromtimestamp(comment['created_at']).date() > edge_date
 
 
 def login_instagram(username, password):
@@ -21,26 +20,27 @@ def login_instagram(username, password):
     return instabot
 
 
-def filter_active_commentators_from_comment(comment, commentators_rating):
-    created_at = datetime.utcfromtimestamp(comment['created_at']).date()
-    if created_at > edge_of_comments_date:
-        increment_rating(comment['user_id'], commentators_rating)
-    return comment['user_id']
-
-
 def get_instagram_audience(bot, target_account_name):
     user_id = bot.get_user_id_from_username(target_account_name)
     user_posts = bot.get_total_user_medias(user_id)[4::-1]
 
-    commentators_rating = {}
-    commentators_by_post_rating = {}
+    edge_of_comments_date = today - timedelta(days=RANGE_OF_USER_COMMENTS_IN_DAYS)
+
+    comments_amount_rating = Counter()
+    commented_posts_amount_rating = Counter()
 
     for post in user_posts:
         comments = bot.get_media_comments(post)
-        commentators = {filter_active_commentators_from_comment(comment, commentators_rating) for comment in comments}
-        [increment_rating(user_id, commentators_by_post_rating) for user_id in commentators]
 
-    return commentators_rating, commentators_by_post_rating
+        commentator_ids = [
+            comment['user_id'] for comment in comments if check_comment_age(comment, edge_of_comments_date)
+        ]
+
+        comments_amount_rating.update(commentator_ids)
+
+        commented_posts_amount_rating.update(set(commentator_ids))
+
+    return comments_amount_rating.most_common(RATING_SIZE_IN_LINES), commented_posts_amount_rating.most_common(RATING_SIZE_IN_LINES)
 
 
 if __name__ == '__main__':
@@ -54,11 +54,9 @@ if __name__ == '__main__':
 
     bot = login_instagram(instagram_username, instagram_password)
 
-    edge_of_comments_date = today - timedelta(days=RANGE_OF_USER_COMMENTS_IN_DAYS)
-
-    commentators_rating, commentators_by_post_rating = get_instagram_audience(bot, target_account_name)
+    comments_amount_rating, commented_posts_amount_rating = get_instagram_audience(bot, target_account_name)
 
     print('----Комментаторы за последние 3 месяца с кол-вом комментариев----:')
-    pprint(commentators_rating)
+    pprint(comments_amount_rating)
     print('----Комментаторы за последние 3 месяца с кол-вом постов, которые комментировали----:')
-    pprint(commentators_by_post_rating)
+    pprint(commented_posts_amount_rating)
