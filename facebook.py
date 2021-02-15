@@ -55,7 +55,7 @@ def get_comments_from_posts(post_ids, days):
 
 
 def get_reactions_from_post(post_ids):
-    reactors = defaultdict(dict)
+    reactors = defaultdict(lambda: defaultdict(int))
 
     for post_id in post_ids:
         url = f'https://graph.facebook.com/v9.0/{post_id}/reactions'
@@ -68,10 +68,15 @@ def get_reactions_from_post(post_ids):
         for reaction in response['data']:
             reactor_id = reaction['id']
 
-            if reactor_id not in reactors:
-                reactors[reactor_id] = REACTIONS_TEMPLATE
-                # не используется defaultdict(int), так как в задаче нужно вывести
-                # ноль для реакций, которые пользователь не ставил
+            # В шаге уроке приведен пример с выводом:
+            # {
+            #     "1629838317162928": {"LIKE": 3, "LOVE": 2, "WOW": 0,
+            #                          "HAHA": 1, "SAD": 0, "ANGRY": 2, "THANKFUL": 3},
+            # }
+            # Если нужно обязательнео вывести ноль у реакций, которые пользователь не ставил,
+            # то я бы раскомментировал следующий код:
+            # if reactor_id not in reactors:
+            #     reactors[reactor_id] = REACTIONS_TEMPLATE
 
             reactors[reactor_id][reaction['type']] += 1
 
