@@ -73,7 +73,7 @@ def get_reactions_from_post(post_ids):
             #     "1629838317162928": {"LIKE": 3, "LOVE": 2, "WOW": 0,
             #                          "HAHA": 1, "SAD": 0, "ANGRY": 2, "THANKFUL": 3},
             # }
-            # Если нужно обязательнео вывести ноль у реакций, которые пользователь не ставил,
+            # Если нужно обязательно вывести ноль у реакций, которые пользователь не ставил,
             # то я бы раскомментировал следующий код:
             # if reactor_id not in reactors:
             #     reactors[reactor_id] = REACTIONS_TEMPLATE
